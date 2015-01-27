@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
 using System.Data.Entity;
 using System.Data.Entity.Core.EntityClient;
@@ -153,12 +152,13 @@ namespace EntityFramework.Utilities
                 var mquery = ((ObjectQuery<T>)context.CreateObjectSet<T>().Where(updateExpression));
                 var mqueryInfo = provider.GetQueryInformation<T>(mquery);
 
+                List<ObjectParameter> mqueryParams = GetFixedParams(query, mquery, mqueryInfo);
+
                 var update = provider.GetUpdateQuery(queryInformation, mqueryInfo);
                 
                 var parameters = query.Parameters
-                    .Concat(mquery.Parameters)
-                    .Select(p => new SqlParameter { Value = p.Value, ParameterName = p.Name })
-                    .ToArray<object>();
+                    .Concat(mqueryParams)
+                    .Select(p => new SqlParameter { Value = p.Value, ParameterName = p.Name }).ToArray<object>();
 
                 return context.ExecuteStoreCommand(update, parameters);
             }
@@ -167,6 +167,33 @@ namespace EntityFramework.Utilities
                 Configuration.Log("Found provider: " + (provider == null ? "[]" : provider.GetType().Name) + " for " + con.StoreConnection.GetType().Name);
                 return Fallbacks.DefaultUpdate(context, this.predicate, prop, modifier);
             }
+        }
+
+        private List<ObjectParameter> GetFixedParams(ObjectQuery<T> query, ObjectQuery<T> mquery, QueryInformation mqueryInfo)
+        {
+            List<ObjectParameter> paramsFixed = new List<ObjectParameter>();
+
+            foreach (ObjectParameter parameter in mquery.Parameters)
+            {
+                int counter = 1;
+                string name = parameter.Name;
+
+                ObjectParameter clonedParameter = new ObjectParameter(parameter.Name, parameter.Value);
+
+                if (query.Parameters.ToList().Exists(x => x.Name == clonedParameter.Name))
+                {
+                    while (query.Parameters.ToList().Exists(x => x.Name == clonedParameter.Name))
+                    {
+                        clonedParameter = new ObjectParameter(name + "_" + counter, parameter.Value);
+                    }
+
+                    mqueryInfo.WhereSql = mqueryInfo.WhereSql.Replace(name, clonedParameter.Name);
+                }
+
+                paramsFixed.Add(clonedParameter);
+            }
+
+            return paramsFixed;
         }
     }
 }

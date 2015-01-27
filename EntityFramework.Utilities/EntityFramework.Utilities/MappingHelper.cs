@@ -119,7 +119,7 @@ namespace EntityFramework.Utilities
                 // (types may have mutliple fragments if 'Entity Splitting' is used)
                 var mappingFragments = edmx
                     .Descendants()
-                    .Single(e =>
+                    .First(e =>
                         e.Name.LocalName == "EntityTypeMapping"
                         && (e.Attribute("TypeName").Value == set.ElementType.FullName || e.Attribute("TypeName").Value == string.Format("IsTypeOf({0})", set.ElementType.FullName)))
                     .Descendants()
