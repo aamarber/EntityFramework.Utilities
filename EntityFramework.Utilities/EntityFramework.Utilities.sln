@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EntityFramework.Utilities", "EntityFramework.Utilities\EntityFramework.Utilities.csproj", "{C3211BAC-13F0-42A7-924C-34BB0EE77914}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{3B0BC291-8087-4F0F-BA20-2CFB4719BE2B}"
@@ -11,6 +13,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		LICENSE.txt = LICENSE.txt
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EntityFramework.Utilities.Seeder", "EntityFramework.Utilities.Seeder\EntityFramework.Utilities.Seeder.csproj", "{F3FF6134-7BA0-4B39-902E-90CC2619C2FA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -30,6 +34,10 @@ Global
 		{B888C7A8-D29C-4ED2-B408-C74E36808E9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B888C7A8-D29C-4ED2-B408-C74E36808E9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B888C7A8-D29C-4ED2-B408-C74E36808E9E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F3FF6134-7BA0-4B39-902E-90CC2619C2FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F3FF6134-7BA0-4B39-902E-90CC2619C2FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F3FF6134-7BA0-4B39-902E-90CC2619C2FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F3FF6134-7BA0-4B39-902E-90CC2619C2FA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
