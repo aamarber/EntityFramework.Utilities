@@ -21,6 +21,7 @@ namespace EntityFramework.Utilities
         /// <param name="connection">The DbConnection to use for the insert. Only needed when for example a profiler wraps the connection. Then you need to provide a connection of the type the provider use.</param>
         /// <param name="batchSize">The size of each batch. Default depends on the provider. SqlProvider uses 15000 as default</param>        
         void InsertAll(IEnumerable<T> items, DbConnection connection = null, int? batchSize = null);
+        int TruncateTable();
         IEFBatchOperationFiltered<TContext, T> Where(Expression<Func<T, bool>> predicate);
     }
 
@@ -126,6 +127,31 @@ namespace EntityFramework.Utilities
             else
             {
                 Configuration.Log("Found provider: " + (provider == null ? "[]" : provider.GetType().Name ) + " for " + con.StoreConnection.GetType().Name);
+                return Fallbacks.DefaultDelete(context, this.predicate);
+            }
+        }
+
+        public int TruncateTable()
+        {
+            var con = context.Connection as EntityConnection;
+            if (con == null)
+            {
+                Configuration.Log("No provider could be found because the Connection didn't implement System.Data.EntityClient.EntityConnection");
+                return Fallbacks.DefaultDelete(context, this.predicate);
+            }
+
+            var provider = Configuration.Providers.FirstOrDefault(p => p.CanHandle(con.StoreConnection));
+            if (provider != null && provider.CanDelete)
+            {
+                var query = (ObjectQuery<T>)context.CreateObjectSet<T>();
+                var queryInformation = provider.GetQueryInformation<T>(query);
+
+                var truncate = provider.GetTruncateQuery(queryInformation);
+                return context.ExecuteStoreCommand(truncate);
+            }
+            else
+            {
+                Configuration.Log("Found provider: " + (provider == null ? "[]" : provider.GetType().Name) + " for " + con.StoreConnection.GetType().Name);
                 return Fallbacks.DefaultDelete(context, this.predicate);
             }
         }

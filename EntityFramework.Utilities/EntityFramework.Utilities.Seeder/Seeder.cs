@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Data.Entity.Migrations;
@@ -18,7 +17,7 @@ namespace EntityFramework.Utilities.Seeder
     /// </summary>
     public static class Seeder
     {
-        private static IList<T> GetEntitiesFromStream<T>(Stream stream, Expression<Func<T, object>> identifierExpression, params CsvColumnMapping<T>[] additionalMapping) where T : class
+        private static IList<T> GetEntitiesFromStream<T>(Stream stream, params CsvColumnMapping<T>[] additionalMapping) where T : class
         {
             IList<T> entities = new List<T>();
             using (StreamReader reader = new StreamReader(stream))
@@ -68,7 +67,7 @@ namespace EntityFramework.Utilities.Seeder
         /// <param name="additionalMapping">Any additonal complex mappings required</param>
         public static void SeedFromStream<T>(this DbContext dbContext, Stream stream, Expression<Func<T, object>> identifierExpression, params CsvColumnMapping<T>[] additionalMapping) where T : class
         {
-            foreach (T entity in GetEntitiesFromStream(stream, identifierExpression, additionalMapping))
+            foreach (T entity in GetEntitiesFromStream(stream, additionalMapping))
             {
                 dbContext.Set<T>().AddOrUpdate(identifierExpression, entity);
             }
@@ -80,11 +79,10 @@ namespace EntityFramework.Utilities.Seeder
         /// <typeparam name="T">The type of entity to load</typeparam>
         /// <param name="dbContext">The dbContext to populate</param>
         /// <param name="stream">The stream containing the CSV file contents</param>
-        /// <param name="identifierExpression">An expression specifying the properties that should be used when determining whether an Add or Update operation should be performed.</param>
         /// <param name="additionalMapping">Any additonal complex mappings required</param>
-        public static void SeedFromStreamWithBulkInsert<T>(this DbContext dbContext, Stream stream, Expression<Func<T, object>> identifierExpression, params CsvColumnMapping<T>[] additionalMapping) where T : class
+        public static void SeedFromStreamWithBulkInsert<T>(this DbContext dbContext, Stream stream, params CsvColumnMapping<T>[] additionalMapping) where T : class
         {
-            EFBatchOperation.For(dbContext, dbContext.Set<T>()).InsertAll(GetEntitiesFromStream(stream, identifierExpression, additionalMapping));
+            EFBatchOperation.For(dbContext, dbContext.Set<T>()).InsertAll(GetEntitiesFromStream(stream, additionalMapping));
         }
 
 
@@ -112,14 +110,13 @@ namespace EntityFramework.Utilities.Seeder
         /// <typeparam name="T">The type of entity to load</typeparam>
         /// <param name="dbContext">The dbContext to populate</param>
         /// <param name="embeddedResourceName">The name of the embedded resource containing the CSV file contents</param>
-        /// <param name="identifierExpression">An expression specifying the properties that should be used when determining whether an Add or Update operation should be performed.</param>
         /// <param name="additionalMapping">Any additonal complex mappings required</param>
-        public static void SeedFromResourceWithBulkInsert<T>(this DbContext dbContext, string embeddedResourceName, Expression<Func<T, object>> identifierExpression, params CsvColumnMapping<T>[] additionalMapping) where T : class
+        public static void SeedFromResourceWithBulkInsert<T>(this DbContext dbContext, string embeddedResourceName, params CsvColumnMapping<T>[] additionalMapping) where T : class
         {
             Assembly assembly = Assembly.GetCallingAssembly();
             using (Stream stream = assembly.GetManifestResourceStream(embeddedResourceName))
             {
-                SeedFromStreamWithBulkInsert(dbContext, stream, identifierExpression, additionalMapping);
+                SeedFromStreamWithBulkInsert(dbContext, stream, additionalMapping);
             }
         }
 
@@ -147,13 +144,12 @@ namespace EntityFramework.Utilities.Seeder
         /// <typeparam name="T">The type of entity to load</typeparam>
         /// <param name="dbContext">The dbContext to populate</param>
         /// <param name="fileName">The name of the file containing the CSV file contents</param>
-        /// <param name="identifierExpression">An expression specifying the properties that should be used when determining whether an Add or Update operation should be performed.</param>
         /// <param name="additionalMapping">Any additonal complex mappings required</param>
-        public static void SeedFromFileWithBulkInsert<T>(this DbContext dbContext, string fileName, Expression<Func<T, object>> identifierExpression, params CsvColumnMapping<T>[] additionalMapping) where T : class
+        public static void SeedFromFileWithBulkInsert<T>(this DbContext dbContext, string fileName, params CsvColumnMapping<T>[] additionalMapping) where T : class
         {
             using (Stream stream = File.OpenRead(fileName))
             {
-                SeedFromStreamWithBulkInsert(dbContext, stream, identifierExpression, additionalMapping);
+                SeedFromStreamWithBulkInsert(dbContext, stream, additionalMapping);
             }
         }
     }

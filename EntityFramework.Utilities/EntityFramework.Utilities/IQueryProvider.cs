@@ -13,6 +13,7 @@ namespace EntityFramework.Utilities
         bool CanInsert { get; }
 
         string GetDeleteQuery(QueryInformation queryInformation);
+        string GetTruncateQuery(QueryInformation queryInformation);
         string GetUpdateQuery(QueryInformation predicateQueryInfo, QueryInformation modificationQueryInfo);
         void InsertItems<T>(IEnumerable<T> items, string schema, string tableName, IList<ColumnMapping> properties, DbConnection storeConnection, int? batchSize);
 

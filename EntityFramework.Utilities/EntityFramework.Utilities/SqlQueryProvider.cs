@@ -19,6 +19,11 @@ namespace EntityFramework.Utilities
             return string.Format("DELETE FROM [{0}].[{1}] {2}", queryInfo.Schema, queryInfo.Table, queryInfo.WhereSql);
         }
 
+        public string GetTruncateQuery(QueryInformation queryInfo)
+        {
+            return string.Format("TRUNCATE TABLE [{0}].[{1}]", queryInfo.Schema, queryInfo.Table);
+        }
+
         public string GetUpdateQuery(QueryInformation predicateQueryInfo, QueryInformation modificationQueryInfo)
         {
             var msql = modificationQueryInfo.WhereSql.Replace("WHERE ", "");
