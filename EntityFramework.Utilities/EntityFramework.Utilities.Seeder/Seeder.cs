@@ -23,6 +23,7 @@ namespace EntityFramework.Utilities.Seeder
             using (StreamReader reader = new StreamReader(stream))
             {
                 CsvReader csvReader = new CsvReader(reader);
+                csvReader.Configuration.CultureInfo = CultureInfo.InvariantCulture;
                 var map = csvReader.Configuration.AutoMap<T>();
                 map.ReferenceMaps.Clear();
                 csvReader.Configuration.RegisterClassMap(map);
