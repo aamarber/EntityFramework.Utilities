@@ -17,7 +17,7 @@ namespace EntityFramework.Utilities.Seeder
     /// </summary>
     public static class Seeder
     {
-        private static IList<T> GetEntitiesFromStream<T>(Stream stream, params CsvColumnMapping<T>[] additionalMapping) where T : class
+        public static IList<T> GetEntitiesFromStream<T>(Stream stream, params CsvColumnMapping<T>[] additionalMapping) where T : class
         {
             IList<T> entities = new List<T>();
             using (StreamReader reader = new StreamReader(stream))
@@ -41,7 +41,13 @@ namespace EntityFramework.Utilities.Seeder
                     }
                     catch (CsvTypeConverterException ex)
                     {
-                        throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Error parsing file"), ex);
+                        throw new InvalidOperationException(
+                            string.Format(CultureInfo.InvariantCulture, "Error parsing file"), ex);
+                    }
+                    catch (FormatException ex)
+                    {
+                        throw new InvalidOperationException(
+                            string.Format(CultureInfo.InvariantCulture, "Error parsing file"), ex);
                     }
 
                     foreach (CsvColumnMapping<T> csvColumnMapping in additionalMapping)
