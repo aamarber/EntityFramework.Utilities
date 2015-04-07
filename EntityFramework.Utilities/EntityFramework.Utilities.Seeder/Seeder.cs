@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Entity;
 using System.Data.Entity.Migrations;
 using System.IO;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using CsvHelper;
@@ -114,9 +115,8 @@ namespace EntityFramework.Utilities.Seeder
         /// <returns>Returns the read entities from the CSV resource. <remarks>It does not return the inserted entities</remarks></returns>
         public static IList<T> SeedFromResource<T>(this DbContext dbContext, string embeddedResourceName, Expression<Func<T, object>> identifierExpression, params CsvColumnMapping<T>[] additionalMapping) where T : class
         {
-            Assembly assembly = Assembly.GetCallingAssembly();
             IList<T> result;
-            using (Stream stream = assembly.GetManifestResourceStream(embeddedResourceName))
+            using (Stream stream = GetResourceStream(embeddedResourceName))
             {
                 result = SeedFromStream(dbContext, stream, identifierExpression, additionalMapping);
             }
@@ -135,15 +135,28 @@ namespace EntityFramework.Utilities.Seeder
         /// <returns>Returns the read entities from the CSV resource. <remarks>It does not return the inserted entities</remarks></returns>
         public static IList<T> SeedFromResourceWithBulkInsert<T>(this DbContext dbContext, string embeddedResourceName, params CsvColumnMapping<T>[] additionalMapping) where T : class
         {
-            Assembly assembly = Assembly.GetCallingAssembly();
             IList<T> result;
 
-            using (Stream stream = assembly.GetManifestResourceStream(embeddedResourceName))
+            using (Stream stream = GetResourceStream(embeddedResourceName))
             {
                 result = SeedFromStreamWithBulkInsert(dbContext, stream, additionalMapping);
             }
 
             return result;
+        }
+
+        private static Stream GetResourceStream(string embeddedResourceName)
+        {
+            var dataAssemblies = AppDomain.CurrentDomain.GetAssemblies();
+
+            foreach (var assembly in dataAssemblies)
+            {
+                Stream result = assembly.GetManifestResourceStream(embeddedResourceName);
+
+                if (result != null) return result;
+            }
+
+            return null;
         }
 
 
