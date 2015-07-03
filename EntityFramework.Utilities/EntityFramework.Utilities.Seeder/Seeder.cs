@@ -53,8 +53,9 @@ namespace EntityFramework.Utilities.Seeder
 
                     foreach (CsvColumnMapping<T> csvColumnMapping in additionalMapping)
                     {
-                        csvColumnMapping.Execute(entity, csvReader.GetField(csvColumnMapping.CsvColumnName));
+                        csvColumnMapping.Execute(ref entity, csvReader.GetField(csvColumnMapping.CsvColumnName));
                     }
+
                     entities.Add(entity);
                 }
 
@@ -78,10 +79,7 @@ namespace EntityFramework.Utilities.Seeder
         {
             IList<T> entities = GetEntitiesFromStream(stream, additionalMapping);
 
-            foreach (T entity in entities)
-            {
-                dbContext.Set<T>().AddOrUpdate(identifierExpression, entity);
-            }
+            dbContext.Set<T>().AddRange(entities);
 
             return entities;
         }

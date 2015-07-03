@@ -8,8 +8,12 @@ namespace EntityFramework.Utilities.Seeder
     /// <typeparam name="T"></typeparam>
     public class CsvColumnMapping<T>
     {
-        private readonly string _csvColumnName;
-        private readonly Action<T, object> _action;
+        private readonly string csvColumnName;
+        private readonly Action<T, object> action;
+
+        public delegate void ActionRef<T>(ref T item, object o);
+
+        private readonly ActionRef<T> actionRef;
 
         /// <summary>
         /// Create new custom mapping action for the specified CSV column name
@@ -18,13 +22,31 @@ namespace EntityFramework.Utilities.Seeder
         /// <param name="action">The action to execute for each row in the CSV file</param>
         public CsvColumnMapping(string csvColumnName, Action<T, object> action)
         {
-            _csvColumnName = csvColumnName;
-            _action = action;
+            this.csvColumnName = csvColumnName;
+            this.action = action;
         }
 
-        public void Execute(T entity, object csvColumnValue)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CsvColumnMapping{T}"/> class.
+        /// </summary>
+        /// <param name="csvColumnName">Name of the CSV column.</param>
+        /// <param name="action">The action.</param>
+        public CsvColumnMapping(string csvColumnName, ActionRef<T> action)
         {
-            _action(entity, csvColumnValue);
+            this.csvColumnName = csvColumnName;
+            actionRef = action;
+        }
+
+        public void Execute(ref T entity, object csvColumnValue)
+        {
+            if (action != null)
+            {
+                action(entity, csvColumnValue);
+            }
+            else if (actionRef != null)
+            {
+                actionRef(ref entity, csvColumnValue);
+            }
         }
 
         /// <summary>
@@ -32,7 +54,7 @@ namespace EntityFramework.Utilities.Seeder
         /// </summary>
         public string CsvColumnName
         {
-            get { return _csvColumnName; }
+            get { return csvColumnName; }
         }
     }
 }
