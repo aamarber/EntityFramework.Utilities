@@ -23,12 +23,7 @@ namespace EntityFramework.Utilities.Seeder
             IList<T> entities = new List<T>();
             using (StreamReader reader = new StreamReader(stream))
             {
-                CsvReader csvReader = new CsvReader(reader);
-                csvReader.Configuration.CultureInfo = CultureInfo.InvariantCulture;
-                var map = csvReader.Configuration.AutoMap<T>();
-                map.ReferenceMaps.Clear();
-                csvReader.Configuration.RegisterClassMap(map);
-                csvReader.Configuration.WillThrowOnMissingField = false;
+                CsvReader csvReader = GetReader<T>(reader);
                 
                 var currentCulture = Thread.CurrentThread.CurrentCulture;
                 Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
@@ -53,6 +48,21 @@ namespace EntityFramework.Utilities.Seeder
 
                     foreach (CsvColumnMapping<T> csvColumnMapping in additionalMapping)
                     {
+                        if (csvColumnMapping.Culture != null)
+                        {
+                            Thread.CurrentThread.CurrentCulture = csvColumnMapping.Culture;
+                            csvReader.Configuration.CultureInfo = csvColumnMapping.Culture;
+                        }
+                        else
+                        {
+                            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+                            csvReader.Configuration.CultureInfo = CultureInfo.InvariantCulture;
+                        }
+
+                        csvReader.ClearRecordCache();
+
+                        var record = csvReader.GetRecord<T>();
+
                         csvColumnMapping.Execute(ref entity, csvReader.GetField(csvColumnMapping.CsvColumnName));
                     }
 
@@ -63,6 +73,18 @@ namespace EntityFramework.Utilities.Seeder
             }
 
             return entities;
+        }
+
+        private static CsvReader GetReader<T>(StreamReader reader)
+        {
+            CsvReader csvReader = new CsvReader(reader);
+            csvReader.Configuration.CultureInfo = CultureInfo.InvariantCulture;
+            var map = csvReader.Configuration.AutoMap<T>();
+            map.ReferenceMaps.Clear();
+            csvReader.Configuration.RegisterClassMap(map);
+            csvReader.Configuration.WillThrowOnMissingField = false;
+
+            return csvReader;
         }
 
 

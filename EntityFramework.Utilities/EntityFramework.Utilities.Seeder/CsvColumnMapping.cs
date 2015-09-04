@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 
 namespace EntityFramework.Utilities.Seeder
 {
@@ -10,6 +11,7 @@ namespace EntityFramework.Utilities.Seeder
     {
         private readonly string csvColumnName;
         private readonly Action<T, object> action;
+        private readonly CultureInfo culture;
 
         public delegate void ActionRef<T>(ref T item, object o);
 
@@ -27,6 +29,19 @@ namespace EntityFramework.Utilities.Seeder
         }
 
         /// <summary>
+        /// Create new custom mapping action for the specified CSV column name
+        /// </summary>
+        /// <param name="csvColumnName">The name of the column in the CSV file</param>
+        /// <param name="action">The action to execute for each row in the CSV file</param>
+        /// <param name="culture">The culture to use when reading the column</param>
+        public CsvColumnMapping(string csvColumnName, Action<T, object> action, CultureInfo culture)
+        {
+            this.csvColumnName = csvColumnName;
+            this.action = action;
+            this.culture = culture;
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="CsvColumnMapping{T}"/> class.
         /// </summary>
         /// <param name="csvColumnName">Name of the CSV column.</param>
@@ -35,6 +50,19 @@ namespace EntityFramework.Utilities.Seeder
         {
             this.csvColumnName = csvColumnName;
             actionRef = action;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CsvColumnMapping{T}"/> class.
+        /// </summary>
+        /// <param name="csvColumnName">Name of the CSV column.</param>
+        /// <param name="action">The action.</param>
+        /// <param name="culture">The culture to use when reading the column</param>
+        public CsvColumnMapping(string csvColumnName, ActionRef<T> action, CultureInfo culture)
+        {
+            this.csvColumnName = csvColumnName;
+            actionRef = action;
+            this.culture = culture;
         }
 
         public void Execute(ref T entity, object csvColumnValue)
@@ -55,6 +83,17 @@ namespace EntityFramework.Utilities.Seeder
         public string CsvColumnName
         {
             get { return csvColumnName; }
+        }
+
+        /// <summary>
+        /// The culture to use when reading the column
+        /// </summary>
+        /// <value>
+        /// The culture to use when reading the column
+        /// </value>
+        public CultureInfo Culture
+        {
+            get { return culture; }
         }
     }
 }
