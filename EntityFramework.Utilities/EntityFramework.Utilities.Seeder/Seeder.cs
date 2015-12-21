@@ -1,15 +1,12 @@
-﻿using System;
+﻿using CsvHelper;
+using CsvHelper.TypeConversion;
+using System;
 using System.Collections.Generic;
 using System.Data.Entity;
-using System.Data.Entity.Migrations;
-using System.IO;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using CsvHelper;
-using CsvHelper.TypeConversion;
-using System.Threading;
 using System.Globalization;
+using System.IO;
+using System.Linq.Expressions;
+using System.Threading;
 
 namespace EntityFramework.Utilities.Seeder
 {
@@ -24,7 +21,7 @@ namespace EntityFramework.Utilities.Seeder
             using (StreamReader reader = new StreamReader(stream))
             {
                 CsvReader csvReader = GetReader<T>(reader);
-                
+
                 var currentCulture = Thread.CurrentThread.CurrentCulture;
                 Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
 
@@ -87,7 +84,6 @@ namespace EntityFramework.Utilities.Seeder
             return csvReader;
         }
 
-
         /// <summary>
         /// Seeds a dbContext from a CSV file that will be read from the specified stream
         /// </summary>
@@ -123,7 +119,6 @@ namespace EntityFramework.Utilities.Seeder
             return entities;
         }
 
-
         /// <summary>
         /// Seeds a dbContext from a CSV file that will be read from the specified embedded resource
         /// </summary>
@@ -143,7 +138,6 @@ namespace EntityFramework.Utilities.Seeder
 
             return result;
         }
-
 
         /// <summary>
         /// Seeds a dbContext from a CSV file that will be read from the specified embedded resource using BulkInsert operation
@@ -171,14 +165,20 @@ namespace EntityFramework.Utilities.Seeder
 
             foreach (var assembly in dataAssemblies)
             {
-                Stream result = assembly.GetManifestResourceStream(embeddedResourceName);
+                try
+                {
+                    Stream result = assembly.GetManifestResourceStream(embeddedResourceName);
 
-                if (result != null) return result;
+                    if (result != null) return result;
+                }
+                catch (NotSupportedException ex)
+                {
+                    Console.WriteLine(ex);
+                }
             }
 
             return null;
         }
-
 
         /// <summary>
         /// Seeds a dbContext from a CSV file that will be read from the specified file name
@@ -199,7 +199,6 @@ namespace EntityFramework.Utilities.Seeder
 
             return result;
         }
-
 
         /// <summary>
         /// Seeds a dbContext from a CSV file that will be read from the specified file name using BulkInsert operation
