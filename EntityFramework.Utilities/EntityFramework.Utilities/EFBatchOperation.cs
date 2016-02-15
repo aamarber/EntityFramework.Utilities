@@ -8,10 +8,11 @@ using System.Data.Entity.Infrastructure;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace EntityFramework.Utilities
 {
-
     public interface IEFBatchOperationBase<TContext, T> where T : class
     {
         /// <summary>
@@ -19,17 +20,21 @@ namespace EntityFramework.Utilities
         /// </summary>
         /// <param name="items">The items to insert</param>
         /// <param name="connection">The DbConnection to use for the insert. Only needed when for example a profiler wraps the connection. Then you need to provide a connection of the type the provider use.</param>
-        /// <param name="batchSize">The size of each batch. Default depends on the provider. SqlProvider uses 15000 as default</param>        
+        /// <param name="batchSize">The size of each batch. Default depends on the provider. SqlProvider uses 15000 as default</param>
         void InsertAll(IEnumerable<T> items, DbConnection connection = null, int? batchSize = null);
+
         int TruncateTable();
+
         IEFBatchOperationFiltered<TContext, T> Where(Expression<Func<T, bool>> predicate);
     }
 
     public interface IEFBatchOperationFiltered<TContext, T>
     {
         int Delete();
+
         int Update<TP>(Expression<Func<T, TP>> prop, Expression<Func<T, TP>> modifier);
     }
+
     public static class EFBatchOperation
     {
         public static IEFBatchOperationBase<TContext, T> For<TContext, T>(TContext context, IDbSet<T> set)
@@ -39,7 +44,8 @@ namespace EntityFramework.Utilities
             return EFBatchOperation<TContext, T>.For(context, set);
         }
     }
-    public class EFBatchOperation<TContext, T> : IEFBatchOperationBase<TContext, T>, IEFBatchOperationFiltered<TContext, T> 
+
+    public class EFBatchOperation<TContext, T> : IEFBatchOperationBase<TContext, T>, IEFBatchOperationFiltered<TContext, T>
         where T : class
         where TContext : DbContext
     {
@@ -80,11 +86,40 @@ namespace EntityFramework.Utilities
             var connectionToUse = connection ?? con.StoreConnection;
 
             var provider = Configuration.Providers.FirstOrDefault(p => p.CanHandle(connectionToUse));
+
+            TypeMapping typeMapping = null;
+
             if (provider != null && provider.CanInsert)
             {
+                var mapping = EfMappingFactory.GetMappingsForContext(this.dbContext);
 
-                var mapping = EntityFramework.Utilities.EfMappingFactory.GetMappingsForContext(this.dbContext);
-                var typeMapping = mapping.TypeMappings[typeof(T)];
+                if (!mapping.TypeMappings.ContainsKey(typeof(T)))
+                {
+                    mapping = EfMappingFactory.GetMappingsForContext(this.dbContext, ignoreCache: true);
+
+                    if (!mapping.TypeMappings.ContainsKey(typeof(T)))
+                    {
+                        var expectedType = mapping.TypeMappings.Keys.FirstOrDefault(x => x.Name == typeof(T).Name);
+
+                        if (expectedType == null)
+                        {
+                            throw new InvalidOperationException(
+                                string.Format(
+                                    "Mapping for type {0} was not found. There were {1} mappings loaded when tried to get the mapping.",
+                                    typeof(T), mapping.TypeMappings.Count));
+                        }
+                        else
+                        {
+                            typeMapping = mapping.TypeMappings[expectedType];
+                        }
+                    }
+                }
+
+                if (typeMapping == null)
+                {
+                    typeMapping = mapping.TypeMappings[typeof(T)];
+                }
+
                 var tableMapping = typeMapping.TableMappings.First();
 
                 var properties = tableMapping.PropertyMappings.Select(p => new ColumnMapping { NameInDatabase = p.ColumnName, NameOnObject = p.PropertyName }).ToList();
@@ -126,7 +161,7 @@ namespace EntityFramework.Utilities
             }
             else
             {
-                Configuration.Log("Found provider: " + (provider == null ? "[]" : provider.GetType().Name ) + " for " + con.StoreConnection.GetType().Name);
+                Configuration.Log("Found provider: " + (provider == null ? "[]" : provider.GetType().Name) + " for " + con.StoreConnection.GetType().Name);
                 return Fallbacks.DefaultDelete(context, this.predicate);
             }
         }
@@ -181,7 +216,7 @@ namespace EntityFramework.Utilities
                 List<ObjectParameter> mqueryParams = GetFixedParams(query, mquery, mqueryInfo);
 
                 var update = provider.GetUpdateQuery(queryInformation, mqueryInfo);
-                
+
                 var parameters = query.Parameters
                     .Concat(mqueryParams)
                     .Select(p => new SqlParameter { Value = p.Value, ParameterName = p.Name }).ToArray<object>();

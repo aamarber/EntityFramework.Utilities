@@ -1,5 +1,5 @@
 ﻿/// <summary>
-/// Adapted from http://romiller.com/2013/09/24/ef-code-first-mapping-between-types-tables/ 
+/// Adapted from http://romiller.com/2013/09/24/ef-code-first-mapping-between-types-tables/
 /// This whole file contains a hack needed because the mapping API is internal pre 6.1 atleast
 /// </summary>
 using System;
@@ -14,7 +14,6 @@ using System.Xml.Linq;
 
 namespace EntityFramework.Utilities
 {
-
     /// <summary>
     /// Represents the mapping of an entitiy type to one or mode tables in the database
     ///
@@ -44,6 +43,7 @@ namespace EntityFramework.Utilities
         /// The name of the table the entity is mapped to
         /// </summary>
         public string TableName { get; set; }
+
         /// <summary>
         /// The schema of the table the entity is mapped to
         /// </summary>
@@ -53,7 +53,6 @@ namespace EntityFramework.Utilities
         /// Details of the property-to-column mapping
         /// </summary>
         public List<PropertyMapping> PropertyMappings { get; set; }
-
     }
 
     /// <summary>
@@ -205,17 +204,21 @@ namespace EntityFramework.Utilities
     {
         private static Dictionary<Type, EfMapping> cache = new Dictionary<Type, EfMapping>();
 
-        public static EfMapping GetMappingsForContext(DbContext context)
+        public static EfMapping GetMappingsForContext(DbContext context, bool ignoreCache = false)
         {
             var type = context.GetType();
             EfMapping mapping;
-            if (!cache.TryGetValue(type, out mapping))
+
+            if (ignoreCache)
+            {
+                mapping = new EfMapping(context);
+            }
+            else if (!cache.TryGetValue(type, out mapping))
             {
                 mapping = new EfMapping(context);
                 cache.Add(type, mapping);
             }
             return mapping;
         }
-
     }
 }
